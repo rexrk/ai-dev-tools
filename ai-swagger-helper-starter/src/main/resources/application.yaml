@@ -1,0 +1,3 @@
+spring:
+  application:
+    name: ai-swagger-spring-boot-starter
