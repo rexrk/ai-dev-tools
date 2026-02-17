@@ -2,42 +2,46 @@ package io.github.rexrk.request;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.rexrk.AiSwaggerHelperProperties.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AbstractMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.http.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
 
 public class AiRequestBodyGeneratorService {
 
     private static final Logger log =
             LoggerFactory.getLogger(AiRequestBodyGeneratorService.class);
-    private final OpenAiChatModel chatModel;
+    private final ChatClient chatClient;
     private final ObjectMapper objectMapper;
+    private final Mode mode;
 
-    public AiRequestBodyGeneratorService(OpenAiChatModel chatModel, ObjectMapper objectMapper) {
-        this.chatModel = chatModel;
+    public AiRequestBodyGeneratorService(ChatClient chatClient, ObjectMapper objectMapper, Mode mode) {
+        this.chatClient = chatClient;
         this.objectMapper = objectMapper;
-
+        this.mode = mode;
     }
 
     public String generateBody(JsonNode schema) {
-        // If no API key, use random generation
-        if (chatModel == null) {
-            return generateRandomBody(schema);
-        }
-
         try {
-            return generateWithAI(schema);
+            return chatClient == null || mode == Mode.RANDOM ?
+                    generateRandomBody(schema) :
+                    generateWithAI(schema);
+
         } catch (Exception e) {
             // Fallback to random on error
             log.warn("AI generation failed, falling back to random");
-            log.debug("Error:",e);
+            log.debug("Error:", e);
             return generateRandomBody(schema);
         }
     }
@@ -46,24 +50,29 @@ public class AiRequestBodyGeneratorService {
         String schemaStr = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema);
 
         String promptText = """
-            Generate a realistic JSON object that matches this OpenAPI schema.
-            Return ONLY valid JSON with no markdown formatting, no explanation.
+                Generate a realistic JSON object that matches this OpenAPI schema.
+                Return ONLY valid JSON with no markdown formatting, no explanation.
+                
+                Schema:
+                %s
+                
+                Requirements:
+                - All required fields must be present
+                - Use realistic, varied sample data (real names, age, emails, addresses, etc.)
+                - Follow any format constraints (email, date-time, uuid, etc.)
+                - Respect min/max constraints for numbers
+                - If there are enums, pick random valid values
+                - Make nested objects and arrays realistic
+                - Output ONLY the JSON object, nothing else
+                """.formatted(schemaStr);
 
-            Schema:
-            %s
 
-            Requirements:
-            - All required fields must be present
-            - Use realistic, varied sample data (real names, age, emails, addresses, etc.)
-            - Follow any format constraints (email, date-time, uuid, etc.)
-            - Respect min/max constraints for numbers
-            - If there are enums, pick random valid values
-            - Make nested objects and arrays realistic
-            - Output ONLY the JSON object, nothing else
-            """.formatted(schemaStr);
+        ChatResponse response = chatClient.prompt()
+                .user(promptText)
+                .call()
+                .chatResponse();
 
-
-        ChatResponse response = chatModel.call(new Prompt(promptText));
+        assert response != null;
         String generatedText = Optional.of(response)
                 .map(ChatResponse::getResult)
                 .map(Generation::getOutput)
@@ -72,14 +81,13 @@ public class AiRequestBodyGeneratorService {
                 .orElseThrow(() ->
                         new IllegalStateException("AI response contained no text output"));
 
-        // Clean the response
         String cleaned = extractJson(generatedText);
-
         log.debug("Cleaned JSON: {}", cleaned);
 
         // Validate JSON
         try {
             objectMapper.readTree(cleaned);
+
         } catch (Exception e) {
             log.error("Failed to parse AI response. Raw: {}, Cleaned: {}", generatedText, cleaned);
             throw new RuntimeException("AI returned invalid JSON: " + e.getMessage());
@@ -120,7 +128,6 @@ public class AiRequestBodyGeneratorService {
 
         return json.substring(0, end + 1).trim();
     }
-
 
     private String generateRandomBody(JsonNode schema) {
         try {
@@ -182,9 +189,8 @@ public class AiRequestBodyGeneratorService {
                 if (schema.has("properties")) {
                     JsonNode properties = schema.get("properties");
 
-                    properties.properties().forEach(entry -> {
-                        obj.put(entry.getKey(), generateFromSchema(entry.getValue()));
-                    });
+                    properties.properties().forEach(entry ->
+                            obj.put(entry.getKey(), generateFromSchema(entry.getValue())));
                 }
                 return obj;
         }

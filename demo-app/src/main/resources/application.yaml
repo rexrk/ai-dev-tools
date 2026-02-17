@@ -1,16 +1,21 @@
 spring:
   application:
     name: demo-app
-ai:
-  swagger:
-    helper:
-      enabled: true
+  ai:
+    openai:
       api-key: ${API_KEY}
-      model-name: openrouter/aurora-alpha
-      temperature: 0.8
-      options:
-        frequency_penalty: 2.0
-        repeat_penalty: 1.1
+      chat:
+        base-url: https://openrouter.ai/api
+        options:
+          model: openrouter/aurora-alpha
+          temperature: 0.8
+          frequencyPenalty: 2.0
+
+devtools:
+  ai:
+    swagger:
+      enabled: true
+      mode: ai
 
 logging:
   level:

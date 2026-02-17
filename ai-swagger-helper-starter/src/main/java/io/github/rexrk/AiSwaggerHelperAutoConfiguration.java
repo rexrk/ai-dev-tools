@@ -14,9 +14,7 @@ import org.springdoc.core.providers.ObjectMapperProvider;
 import org.springdoc.webmvc.ui.SwaggerIndexPageTransformer;
 import org.springdoc.webmvc.ui.SwaggerIndexTransformer;
 import org.springdoc.webmvc.ui.SwaggerWelcomeCommon;
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -44,7 +42,7 @@ import java.util.Map;
         jakarta.servlet.http.HttpServletRequest.class,
 })
 @ConditionalOnProperty(
-        prefix = "ai.swagger.helper",
+        prefix = AiSwaggerHelperProperties.prefix,
         name = "enabled",
         havingValue = BooleanUtils.TRUE,
         matchIfMissing = true
@@ -70,34 +68,10 @@ public class AiSwaggerHelperAutoConfiguration {
     /**
      * 1️⃣ Spring-Ai configuration
      */
-
-    @Bean
-    @ConditionalOnMissingBean(OpenAiApi.class)
-    @ConditionalOnProperty(prefix = "ai.swagger.helper", name = "api-key")
-    public OpenAiApi openAiApi(AiSwaggerHelperProperties properties) {
-        return OpenAiApi.builder()
-                .apiKey(properties.getApiKey())
-                .baseUrl(properties.getBaseUrl())
-                .build();
-
-    }
-
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "ai.swagger.helper", name = "api-key")
-    public OpenAiChatModel openAiChatModel(
-            AiSwaggerHelperProperties properties,
-            OpenAiApi openAiApi) {
-        OpenAiChatOptions options = OpenAiChatOptions.builder()
-                .model(properties.getModelName())
-                .temperature(properties.getTemperature())
-                .extraBody(properties.getOptions())
-                .build();
-
-        return OpenAiChatModel.builder()
-                .openAiApi(openAiApi)
-                .defaultOptions(options)
-                .build();
+    public ChatClient chatClient(ChatClient.Builder chatClientBuilder) {
+        return chatClientBuilder.build();
     }
 
     /**
@@ -106,10 +80,14 @@ public class AiSwaggerHelperAutoConfiguration {
 
     @Bean
     public AiRequestBodyGeneratorService aiRequestBodyGeneratorService(
-            ObjectProvider<OpenAiChatModel> chatModel,
+            ObjectProvider<ChatClient> chatClientObjectProvider,
             ObjectMapper objectMapper
     ) {
-        return new AiRequestBodyGeneratorService(chatModel.getIfAvailable(), objectMapper);
+        return new AiRequestBodyGeneratorService(
+                chatClientObjectProvider.getIfAvailable(),
+                objectMapper,
+                properties.getMode()
+        );
 
     }
 
@@ -218,6 +196,6 @@ public class AiSwaggerHelperAutoConfiguration {
 
     @PostConstruct
     void logProps() {
-        if (properties.isEnabled()) log.info("AI Swagger Helper enabled");
+        if (properties.isEnabled()) log.info("AI Swagger Helper enabled. Mode: {}", properties.getMode());
     }
 }

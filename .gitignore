@@ -23,7 +23,7 @@
 hs_err_pid*
 replay_pid*
 
-.idea
+.idea/
 /ai-swagger-spring-boot-starter/.mvn/
 /ai-swagger-spring-boot-starter/mvnw
 /ai-swagger-spring-boot-starter/mvnw.cmd
@@ -33,4 +33,3 @@ replay_pid*
 /ai-swagger-helper-starter/.mvn/
 /ai-swagger-helper-starter/ai-swagger-helper-starter.iml
 /ai-swagger-helper-starter/mvnw.cmd
-/.idea/
