@@ -20,6 +20,7 @@
 
     <modules>
         <module>ai-swagger-helper-starter</module>
+        <module>ai-exception-insights-starter</module>
         <module>demo-app</module>
     </modules>
 
