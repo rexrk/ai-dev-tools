@@ -84,7 +84,7 @@ const AiGenerateBodyPlugin = (system) => {
                         console.log("📝 Resolved schema:", resolvedSchema);
 
                         // Call Spring Boot backend
-                        const response = await fetch("/ai-swagger/generate", {
+                        const response = await fetch("/devtools/ai/request-body/generate", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ schema: resolvedSchema })

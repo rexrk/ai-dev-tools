@@ -107,7 +107,7 @@ public class AiSwaggerHelperAutoConfiguration {
             AiSwaggerHelperController controller) {
 
         return RouterFunctions.route()
-                .POST("/ai-swagger/generate",
+                .POST("/devtools/ai/request-body/generate",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
                         request -> {
                             try {
