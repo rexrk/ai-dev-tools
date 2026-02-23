@@ -1,11 +1,10 @@
-package io.github.rexrk;
+package io.github.rexrk.swagger.helper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import io.github.rexrk.request.AiRequestBodyGeneratorService;
-import io.github.rexrk.request.AiSwaggerHelperController;
+import io.github.rexrk.swagger.helper.request.AiRequestBodyGeneratorService;
+import io.github.rexrk.swagger.helper.request.AiSwaggerHelperController;
 import jakarta.annotation.PostConstruct;
-import org.apache.commons.lang3.BooleanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.core.properties.SwaggerUiConfigProperties;
@@ -44,7 +43,6 @@ import java.util.Map;
 @ConditionalOnProperty(
         prefix = AiSwaggerHelperProperties.prefix,
         name = "enabled",
-        havingValue = BooleanUtils.TRUE,
         matchIfMissing = true
 )
 @EnableConfigurationProperties(AiSwaggerHelperProperties.class)

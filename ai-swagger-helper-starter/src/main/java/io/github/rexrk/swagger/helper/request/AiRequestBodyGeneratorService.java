@@ -1,8 +1,8 @@
-package io.github.rexrk.request;
+package io.github.rexrk.swagger.helper.request;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.rexrk.AiSwaggerHelperProperties.*;
+import io.github.rexrk.swagger.helper.AiSwaggerHelperProperties.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;

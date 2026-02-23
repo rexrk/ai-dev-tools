@@ -1,10 +1,10 @@
-package io.github.rexrk;
+package io.github.rexrk.swagger.helper;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = AiSwaggerHelperProperties.prefix)
 public class AiSwaggerHelperProperties {
-    public static final String prefix = "devtools.ai.swagger";
+    public static final String prefix = "devtools.ai.swagger-helper";
     private boolean enabled = true;
     private Mode mode = Mode.AUTO;
 

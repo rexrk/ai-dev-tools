@@ -1,4 +1,4 @@
-package io.github.rexrk.request;
+package io.github.rexrk.swagger.helper.request;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

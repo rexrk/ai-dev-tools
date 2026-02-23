@@ -13,7 +13,7 @@ spring:
 
 devtools:
   ai:
-    swagger:
+    swagger-helper:
       enabled: true
       mode: ai
 
