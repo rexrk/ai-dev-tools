@@ -3,7 +3,6 @@ package io.github.rexrk.exception.insights.model;
 import java.util.List;
 
 public record AiPromptContext(
-
     // One-line summary
     String exceptionClass,
     String exceptionMessage,
