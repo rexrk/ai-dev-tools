@@ -1,6 +1,7 @@
 package io.github.rexrk.exception.insights.store;
 
 import io.github.rexrk.exception.insights.model.ErrorEvent;
+import io.github.rexrk.exception.insights.service.ErrorOutputService;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -14,11 +15,15 @@ public class InMemoryErrorEventStore {
     private final Deque<ErrorEvent> events;
     private final int maxEvents;
     private final Duration deduplicationWindow;
+    private final ErrorOutputService outputService;
 
-    public InMemoryErrorEventStore(int maxEvents, Duration deduplicationWindow) {
+    public InMemoryErrorEventStore(int maxEvents,
+                                   Duration deduplicationWindow,
+                                   ErrorOutputService outputService) {
         this.maxEvents = maxEvents;
         this.deduplicationWindow = deduplicationWindow;
         this.events = new ArrayDeque<>(maxEvents);
+        this.outputService = outputService;
     }
 
     public synchronized void save(ErrorEvent event) {
@@ -29,6 +34,7 @@ public class InMemoryErrorEventStore {
             events.pollFirst(); // drop oldest
         }
         events.addLast(event);
+        outputService.onErrorCaptured(event);
     }
 
     public synchronized List<ErrorEvent> getRecent(int limit) {

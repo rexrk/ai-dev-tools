@@ -1,6 +1,7 @@
 package io.github.rexrk.exception.insights.capture;
 
 import io.github.rexrk.exception.insights.model.ErrorEvent;
+import io.github.rexrk.exception.insights.service.AiExplanationService;
 import io.github.rexrk.exception.insights.store.InMemoryErrorEventStore;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -12,11 +13,14 @@ public class AopExceptionCapture {
 
     private final InMemoryErrorEventStore store;
     private final RingBufferLogAppender logAppender;
+    private final AiExplanationService aiService;
 
     public AopExceptionCapture(InMemoryErrorEventStore store,
-                               RingBufferLogAppender logAppender) {
+                               RingBufferLogAppender logAppender,
+                               AiExplanationService aiService) {
         this.store = store;
         this.logAppender = logAppender;
+        this.aiService = aiService;
     }
 
     @Around("@annotation(org.springframework.transaction.annotation.Transactional)")
@@ -45,14 +49,14 @@ public class AopExceptionCapture {
 
     private void capture(Exception ex, ErrorEvent.Type type, String signature) {
         ErrorEvent event = ErrorEvent.builder()
-            .type(type)
-            .exception(ex)
-            .context("method", signature)
-            .context("thread", Thread.currentThread().getName())
-            .recentLogs(logAppender.drainRecent(10))
-            .build();
+                .type(type)
+                .exception(ex)
+                .context("method", signature)
+                .context("thread", Thread.currentThread().getName())
+                .recentLogs(logAppender.drainRecent(10))
+                .build();
 
         store.save(event);
-        // aiService.explainAsync(event); -- wire after AI service is built
+        aiService.explainAsync(event);
     }
 }

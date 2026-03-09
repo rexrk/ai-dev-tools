@@ -1,6 +1,7 @@
 package io.github.rexrk.exception.insights.capture;
 
 import io.github.rexrk.exception.insights.model.ErrorEvent;
+import io.github.rexrk.exception.insights.service.AiExplanationService;
 import io.github.rexrk.exception.insights.store.InMemoryErrorEventStore;
 import org.jspecify.annotations.NonNull;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
@@ -12,11 +13,14 @@ public class AsyncExceptionCapture implements AsyncUncaughtExceptionHandler {
 
     private final InMemoryErrorEventStore store;
     private final RingBufferLogAppender logAppender;
+    private final AiExplanationService aiService;
 
     public AsyncExceptionCapture(InMemoryErrorEventStore store,
-                                 RingBufferLogAppender logAppender) {
+                                 RingBufferLogAppender logAppender,
+                                 AiExplanationService aiService) {
         this.store = store;
         this.logAppender = logAppender;
+        this.aiService = aiService;
     }
 
     @Override
@@ -32,6 +36,6 @@ public class AsyncExceptionCapture implements AsyncUncaughtExceptionHandler {
             .build();
 
         store.save(event);
-        // aiService.explainAsync(event); -- wire after AI service is built
+        aiService.explainAsync(event);
     }
 }

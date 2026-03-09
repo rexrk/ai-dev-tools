@@ -1,6 +1,7 @@
 package io.github.rexrk.exception.insights.capture;
 
 import io.github.rexrk.exception.insights.model.ErrorEvent;
+import io.github.rexrk.exception.insights.service.AiExplanationService;
 import io.github.rexrk.exception.insights.store.InMemoryErrorEventStore;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,31 +16,32 @@ import java.util.Map;
 public class HttpExceptionCapture {
 
     private final InMemoryErrorEventStore store;
-//    private final AiExplanationService aiService;
+    private final AiExplanationService aiService;
     private final RingBufferLogAppender logAppender;
 
     public HttpExceptionCapture(InMemoryErrorEventStore store,
-                                RingBufferLogAppender logAppender) {
+                                RingBufferLogAppender logAppender,
+                                AiExplanationService aiService
+    ) {
         this.store = store;
-//        this.aiService = aiService;
+        this.aiService = aiService;
         this.logAppender = logAppender;
     }
 
     @ExceptionHandler(Exception.class)
     public void handleAll(Exception ex, HttpServletRequest request) throws Exception {
         ErrorEvent event = ErrorEvent.builder()
-            .type(ErrorEvent.Type.HTTP_REQUEST)
-            .exception(ex)
-            .httpMethod(request.getMethod())
-            .requestUri(request.getRequestURI())
-            .requestHeaders(extractHeaders(request))
-            .requestBody(extractBody(request))
-            .recentLogs(logAppender.drainRecent(5))
-            .build();
+                .type(ErrorEvent.Type.HTTP_REQUEST)
+                .exception(ex)
+                .httpMethod(request.getMethod())
+                .requestUri(request.getRequestURI())
+                .requestHeaders(extractHeaders(request))
+                .requestBody(extractBody(request))
+                .recentLogs(logAppender.drainRecent(5))
+                .build();
 
         store.save(event);
-//        AiPromptMapper.from(event);
-//        aiService.explainAsync(event);
+        aiService.explainAsync(event);
         throw ex;
     }
 
@@ -49,7 +51,7 @@ public class HttpExceptionCapture {
         while (names.hasMoreElements()) {
             String name = names.nextElement();
             if (!name.equalsIgnoreCase("authorization") &&
-                !name.equalsIgnoreCase("cookie")) {
+                    !name.equalsIgnoreCase("cookie")) {
                 headers.put(name, request.getHeader(name));
             }
         }

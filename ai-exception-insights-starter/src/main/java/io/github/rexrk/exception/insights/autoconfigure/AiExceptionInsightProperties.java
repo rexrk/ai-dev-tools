@@ -13,7 +13,7 @@ public class AiExceptionInsightProperties {
     private int maxEvents = 10;
     private Duration deduplicationWindow = Duration.ofSeconds(5);
     private int logBufferSize = 5;
-    private OutputMode output = OutputMode.UI;
+    private OutputMode output = OutputMode.CONSOLE;
 
     // getters and setters
     public boolean isEnabled()                       { return enabled; }
