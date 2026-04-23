@@ -1,10 +1,11 @@
-package io.github.rexrk.exception.insights.service;
+package io.github.rexrk.exception.insights.service.ai;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.rexrk.exception.insights.model.AiExplanation;
 import io.github.rexrk.exception.insights.model.AiPromptContext;
 import io.github.rexrk.exception.insights.model.ErrorEvent;
+import io.github.rexrk.exception.insights.service.output.ErrorOutput;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.scheduling.annotation.Async;
 
@@ -14,11 +15,11 @@ public class AiExplanationService {
 
     private final ChatClient chatClient;
     private final ObjectMapper objectMapper;
-    private final ErrorOutputService outputService;
+    private final ErrorOutput outputService;
 
     public AiExplanationService(ChatClient chatClient,
                                 ObjectMapper objectMapper,
-                                ErrorOutputService outputService) {
+                                ErrorOutput outputService) {
         this.chatClient = chatClient;
         this.objectMapper = objectMapper;
         this.outputService = outputService;

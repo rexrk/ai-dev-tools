@@ -18,12 +18,16 @@ public class AiExceptionInsightProperties {
     // getters and setters
     public boolean isEnabled()                       { return enabled; }
     public void setEnabled(boolean enabled)          { this.enabled = enabled; }
+
     public int getMaxEvents()                        { return maxEvents; }
     public void setMaxEvents(int maxEvents)          { this.maxEvents = maxEvents; }
+
     public int getLogBufferSize()                    { return logBufferSize; }
     public void setLogBufferSize(int logBufferSize)  { this.logBufferSize = logBufferSize; }
+
     public Duration getDeduplicationWindow()         { return deduplicationWindow; }
     public void setDeduplicationWindow(Duration d)   { this.deduplicationWindow = d; }
+
     public OutputMode getOutput()                    { return output; }
     public void setOutput(OutputMode output)         { this.output = output; }
 

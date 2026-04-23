@@ -1,8 +1,9 @@
-package io.github.rexrk.exception.insights.service;
+package io.github.rexrk.exception.insights.service.output.ui;
 
 import io.github.rexrk.exception.insights.model.ErrorEvent;
+import io.github.rexrk.exception.insights.service.output.ErrorOutput;
 
-public class UiErrorOutputService implements ErrorOutputService {
+public class UiErrorOutput implements ErrorOutput {
 
     @Override
     public void onErrorCaptured(ErrorEvent event) {

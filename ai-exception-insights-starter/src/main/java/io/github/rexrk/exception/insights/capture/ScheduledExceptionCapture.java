@@ -1,7 +1,7 @@
 package io.github.rexrk.exception.insights.capture;
 
 import io.github.rexrk.exception.insights.model.ErrorEvent;
-import io.github.rexrk.exception.insights.service.AiExplanationService;
+import io.github.rexrk.exception.insights.service.ai.AiExplanationService;
 import io.github.rexrk.exception.insights.store.InMemoryErrorEventStore;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.BeansException;

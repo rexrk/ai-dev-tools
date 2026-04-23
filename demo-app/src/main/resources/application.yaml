@@ -7,7 +7,7 @@ spring:
       chat:
         base-url: https://openrouter.ai/api
         options:
-          model: openrouter/aurora-alpha
+          model: stepfun/step-3.5-flash:free
           temperature: 0.8
           frequencyPenalty: 2.0
 
@@ -16,6 +16,9 @@ devtools:
     swagger-helper:
       enabled: true
       mode: ai
+    exception-insights:
+      enabled: true
+      output: console
 
 logging:
   level:

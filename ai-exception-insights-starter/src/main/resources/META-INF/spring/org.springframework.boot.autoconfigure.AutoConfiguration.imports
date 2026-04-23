@@ -1,1 +1,1 @@
-io.github.rexrk.autoconfigure.AiExceptionInsightsAutoConfiguration
+io.github.rexrk.exception.insights.autoconfigure.AiExceptionInsightsAutoConfiguration

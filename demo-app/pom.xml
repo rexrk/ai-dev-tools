@@ -28,11 +28,11 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>io.github.rexrk</groupId>-->
-<!--            <artifactId>ai-exception-insights-starter</artifactId>-->
-<!--            <version>0.0.1-SNAPSHOT</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>io.github.rexrk</groupId>
+            <artifactId>ai-exception-insights-starter</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

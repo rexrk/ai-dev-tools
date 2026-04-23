@@ -1,4 +1,4 @@
-package io.github.rexrk.exception.insights.service;
+package io.github.rexrk.exception.insights.service.ai;
 
 import io.github.rexrk.exception.insights.model.AiPromptContext;
 import io.github.rexrk.exception.insights.model.ErrorEvent;
