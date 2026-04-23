@@ -5,13 +5,20 @@ import io.github.rexrk.exception.insights.service.output.ErrorOutput;
 
 public class UiErrorOutput implements ErrorOutput {
 
+//    private final SseEmitterRegistry registry;
+//
+//    public UiErrorOutput(SseEmitterRegistry registry) {
+//        this.registry = registry;
+//    }
+
     @Override
     public void onErrorCaptured(ErrorEvent event) {
-        // no-op — UI polls the store directly via REST endpoints
+//        registry.broadcast("error-captured", event);
+
     }
 
     @Override
     public void onAiExplanationReady(ErrorEvent event) {
-        // no-op — AI explanation is already set on the event in the store
+//        registry.broadcast("ai-insight-ready", event);
     }
 }

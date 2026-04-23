@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Error Insight Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="dashboard.css"/>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="3"/><path d="M6 1v2M6 9v2M1 6h2M9 6h2" stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
+    </div>
+    <span class="topbar-title">Error Insight</span>
+    <span class="topbar-sub">real-time monitor</span>
+  </div>
+  <div class="topbar-right">
+    <div class="sse-pill">
+      <div class="sse-dot live" id="sseDot"></div>
+      <span id="sseLabel">SSE connected</span>
+    </div>
+    <div class="theme-toggle" id="themeToggle">
+      <span id="themeLabel">Light</span>
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="workspace">
+  <div class="sidebar">
+    <div class="sidebar-head">
+      <span class="sidebar-head-label">Errors</span>
+      <button class="btn-clear" id="btnClear">clear all</button>
+    </div>
+    <div class="error-list" id="errorList">
+      <div class="list-empty">No errors captured yet</div>
+    </div>
+  </div>
+
+  <div class="main" id="mainArea">
+    <div class="main-empty" id="emptyState">
+      <div class="main-empty-icon">◎</div>
+      <div class="main-empty-text">Select an error to inspect</div>
+    </div>
+    <div class="detail" id="detailPanel" style="display:none;"></div>
+  </div>
+</div>
+
+<script src="dashboard.js" defer></script>
+</body>
+</html>
