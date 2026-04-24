@@ -1,5 +1,5 @@
 (() => {
-  const BASE = `${window.location.origin}`;
+  const BASE = `${window.location.origin}/dev-tools`;
 
   const SAMPLE = [
     {
@@ -90,20 +90,33 @@
   // ── Render: sidebar list ─────────────────────────────────
   function renderList() {
     const list = document.getElementById('errorList');
+
     if (!errors.length) {
       list.innerHTML = '<div class="list-empty">No errors captured yet.<br>Waiting for events…</div>';
       return;
     }
+
     list.innerHTML = errors.map(e => `
-      <div class="error-item${selectedId === e.id ? ' selected' : ''}" data-id="${esc(e.id)}">
-        <div class="error-item-row1">
-          <span class="badge badge-${esc(e.type)}">${esc(e.type.replace(/_/g, ' '))}</span>
-          ${!e.aiExplanation ? '<span class="analyzing-chip">analyzing…</span>' : ''}
-        </div>
-        <div class="error-exc">${esc(shortClass(e.exceptionClass))}</div>
-        <div class="error-time">${esc(fmtDateTime(e.timestamp))}</div>
+    <div class="error-item${selectedId === e.id ? ' selected' : ''}" data-id="${esc(e.id)}">
+      <div class="error-item-row1">
+        <span class="badge badge-${esc(e.type)}">
+          ${esc(e.type.replace(/_/g, ' '))}
+        </span>
+
+        ${e.isNew ? '<span class="new-chip">NEW</span>' : ''}
+
+        ${!e.aiExplanation ? '<span class="analyzing-chip">analyzing…</span>' : ''}
       </div>
-    `).join('');
+
+      <div class="error-exc">
+        ${esc(shortClass(e.exceptionClass))}
+      </div>
+
+      <div class="error-time">
+        ${esc(fmtDateTime(e.timestamp))}
+      </div>
+    </div>
+  `).join('');
 
     list.querySelectorAll('.error-item').forEach(el => {
       el.addEventListener('click', () => selectError(el.dataset.id));
@@ -215,9 +228,21 @@
   }
 
   function addError(e) {
-    errors = [e, ...errors.filter(x => x.id !== e.id)];
+    const newError = {
+      ...e,
+      isNew: true
+    };
+
+    errors = [
+      newError,
+      ...errors.map(item => ({
+        ...item,
+        isNew: false
+      }))
+    ];
+
     renderList();
-    selectError(e.id);
+    selectError(newError.id);
   }
 
   function updateAi(id, aiExplanation) {
@@ -232,7 +257,7 @@
   // ── API ──────────────────────────────────────────────────
   async function fetchEvents() {
     try {
-      const res = await fetch(`${BASE}/events`);
+      const res = await fetch(`${BASE}/stream`);
       if (!res.ok) throw new Error('non-2xx');
       errors = await res.json();
       renderList();
@@ -255,7 +280,7 @@
         addError(JSON.parse(ev.data));
       });
 
-      eventSource.addEventListener('ai-ready', ev => {
+      eventSource.addEventListener('ai-insight-ready', ev => {
         const dto = JSON.parse(ev.data);
         updateAi(dto.id, dto.aiExplanation);
       });
@@ -276,7 +301,6 @@
 
   // ── Event listeners ──────────────────────────────────────
   document.getElementById('btnClear').addEventListener('click', async () => {
-    try { await fetch(`${BASE}/events`, { method: 'DELETE' }); } catch { /* ignore */ }
     errors     = [];
     selectedId = null;
     renderList();
@@ -293,5 +317,5 @@
 
   // ── Boot ─────────────────────────────────────────────────
   connectSSE();
-  fetchEvents();
+  fetchEvents().then(r => {});
 })();

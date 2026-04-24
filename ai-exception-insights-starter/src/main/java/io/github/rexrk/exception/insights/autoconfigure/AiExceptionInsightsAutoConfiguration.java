@@ -7,6 +7,7 @@ import io.github.rexrk.exception.insights.service.output.console.ConsoleErrorOut
 import io.github.rexrk.exception.insights.service.output.ErrorOutput;
 import io.github.rexrk.exception.insights.service.output.ui.UiErrorOutput;
 import io.github.rexrk.exception.insights.store.InMemoryErrorEventStore;
+import io.github.rexrk.ui.dashboard.SseEmitterRegistry;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -43,8 +44,8 @@ public class AiExceptionInsightsAutoConfiguration {
     @ConditionalOnProperty(prefix = AiExceptionInsightProperties.prefix,
             name = "output",
             havingValue = "UI")
-    public ErrorOutput uiErrorOutputService() {
-        return new UiErrorOutput();
+    public ErrorOutput uiErrorOutputService(SseEmitterRegistry emitterRegistry) {
+        return new UiErrorOutput(emitterRegistry);
     }
 
     // --- Store ---

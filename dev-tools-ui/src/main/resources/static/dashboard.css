@@ -200,6 +200,26 @@ body { display: flex; flex-direction: column; }
   border-color: var(--red);
 }
 
+.new-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 3px 8px;
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  background: rgba(34, 197, 94, 0.14);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #e11f1f;
+
+  font-family: var(--font-sans), serif;
+}
+
 /* ── Error list ── */
 .error-list { flex: 1; overflow-y: auto; }
 .error-list::-webkit-scrollbar { width: 4px; }

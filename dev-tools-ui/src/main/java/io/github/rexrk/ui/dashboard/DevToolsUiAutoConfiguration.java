@@ -1,11 +1,21 @@
 package io.github.rexrk.ui.dashboard;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
 
 @AutoConfiguration
-@ComponentScan(basePackages = "io.github.rexrk.ui.dashboard")
-@ConditionalOnProperty(prefix = "devtools.ui", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class DevToolsUiAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SseEmitterRegistry sseEmitterRegistry() {
+        return new SseEmitterRegistry();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public DashboardController dashboardController(SseEmitterRegistry registry) {
+        return new DashboardController(registry);
+    }
 }
