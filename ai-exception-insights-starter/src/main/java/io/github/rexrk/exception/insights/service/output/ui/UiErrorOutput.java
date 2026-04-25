@@ -18,6 +18,7 @@ public class UiErrorOutput implements ErrorOutput {
     @Override
     public void onErrorCaptured(ErrorEvent event) {
         DashboardEvent dashboardEvent = new DashboardEvent(
+                event.getId(),
                 event.getType().name(),
                 event.getExceptionClass(),
                 LocalDateTime.now().toString()
@@ -29,6 +30,7 @@ public class UiErrorOutput implements ErrorOutput {
     @Override
     public void onAiExplanationReady(ErrorEvent event) {
         DashboardEvent dashboardEvent = new DashboardEvent(
+                event.getId(),
                 event.getType().name(),
                 event.getExceptionClass(),
                 LocalDateTime.now().toString()

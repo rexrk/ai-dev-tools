@@ -7,7 +7,7 @@ spring:
       chat:
         base-url: https://openrouter.ai/api
         options:
-          model: stepfun/step-3.5-flash:free
+          model: inclusionai/ling-2.6-1t:free
           temperature: 0.8
           frequencyPenalty: 2.0
 

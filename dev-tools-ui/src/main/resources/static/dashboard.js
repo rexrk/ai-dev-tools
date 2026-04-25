@@ -1,5 +1,6 @@
 (() => {
-  const BASE = `${window.location.origin}/dev-tools`;
+  const BASE_UI = `${window.location.origin}/dev-tools`;
+  const BASE_API = `${window.location.origin}/exception-insights`;
 
   const SAMPLE = [
     {
@@ -9,13 +10,13 @@
       httpMethod: 'POST', requestUri: '/api/users', requestBody: '{"name":"John"}',
       context: { thread: 'http-nio-8080', method: 'UserService.createUser' },
       recentLogs: [
-        { level: 'WARN',  message: 'Validation skipped',         loggerName: 'com.example.UserService',    threadName: 'http-nio-8080', timestamp: '2026-04-20T10:29:59Z' },
-        { level: 'INFO',  message: 'Request received: POST /api/users', loggerName: 'com.example.RequestFilter', threadName: 'http-nio-8080', timestamp: '2026-04-20T10:29:58Z' }
+        { level: 'WARN', message: 'Validation skipped', loggerName: 'com.example.UserService', threadName: 'http-nio-8080', timestamp: '2026-04-20T10:29:59Z' },
+        { level: 'INFO', message: 'Request received: POST /api/users', loggerName: 'com.example.RequestFilter', threadName: 'http-nio-8080', timestamp: '2026-04-20T10:29:58Z' }
       ],
       aiExplanation: {
         summary: 'A null value was returned by getUser() and dereferenced without a null check, causing a NullPointerException during user creation.',
         causes: ['UserRepository.findById() returned null and was not checked before use', 'The user lookup was skipped due to missing validation in the request pipeline'],
-        fixes:  ['Add a null check after calling getUser() and return a 404 if the user is absent', 'Ensure request validation runs before the service layer is invoked', 'Consider using Optional<User> to make null-safety explicit']
+        fixes: ['Add a null check after calling getUser() and return a 404 if the user is absent', 'Ensure request validation runs before the service layer is invoked', 'Consider using Optional<User> to make null-safety explicit']
       }
     },
     {
@@ -28,46 +29,16 @@
       ],
       aiExplanation: null
     },
-    {
-      id: 'g7h8i9', timestamp: '2026-04-20T10:25:00Z', type: 'TRANSACTIONAL',
-      exceptionClass: 'javax.persistence.OptimisticLockException', message: 'Row was updated or deleted by another transaction',
-      rootCauseClass: 'javax.persistence.OptimisticLockException', rootCauseMessage: 'Row was updated or deleted by another transaction',
-      context: { thread: 'http-nio-8081', method: 'OrderService.updateStatus' },
-      recentLogs: [
-        { level: 'WARN', message: 'Optimistic lock conflict detected', loggerName: 'com.example.OrderService', threadName: 'http-nio-8081', timestamp: '2026-04-20T10:24:58Z' }
-      ],
-      aiExplanation: {
-        summary: 'Two concurrent transactions attempted to update the same row simultaneously; the second update detected a version mismatch and was rolled back.',
-        causes: ['Concurrent requests modified the same Order entity without coordination', 'The version column was not refreshed before the second write'],
-        fixes:  ['Implement retry logic with exponential backoff for OptimisticLockException', 'Reduce transaction scope to minimize contention window', 'Use pessimistic locking for high-contention entities if conflicts are frequent']
-      }
-    },
-    {
-      id: 'j1k2l3', timestamp: '2026-04-20T10:20:00Z', type: 'ASYNC',
-      exceptionClass: 'java.util.concurrent.TimeoutException', message: 'Task execution timed out after 30s',
-      rootCauseClass: 'java.util.concurrent.TimeoutException', rootCauseMessage: 'Task execution timed out after 30s',
-      context: { thread: 'async-executor-3', method: 'EmailService.sendBatch' },
-      recentLogs: [
-        { level: 'WARN',  message: 'Async task queue size: 847',    loggerName: 'com.example.AsyncConfig',  threadName: 'async-executor-3', timestamp: '2026-04-20T10:19:50Z' },
-        { level: 'DEBUG', message: 'Starting batch email dispatch', loggerName: 'com.example.EmailService', threadName: 'async-executor-3', timestamp: '2026-04-20T10:19:30Z' }
-      ],
-      aiExplanation: {
-        summary: 'The async email batch task exceeded the 30-second execution timeout, likely due to a large queue backed up by slow SMTP responses.',
-        causes: ['Queue size of 847 items exceeded expected throughput for the timeout window', 'SMTP server response times may have degraded'],
-        fixes:  ['Increase the async task timeout or split batches into smaller chunks', 'Add circuit-breaker logic for slow external SMTP dependencies', 'Monitor queue depth and implement backpressure']
-      }
-    }
   ];
 
-  // ── State ────────────────────────────────────────────────
+  // ── State ─────────────────────────────────────────────────
   let errors     = [];
   let selectedId = null;
   let eventSource = null;
+  let demoMode   = false;
 
-  // ── Helpers ──────────────────────────────────────────────
-  function shortClass(cls) {
-    return cls ? cls.split('.').pop() : '';
-  }
+  // ── Helpers ───────────────────────────────────────────────
+  function shortClass(cls) { return cls ? cls.split('.').pop() : ''; }
 
   function fmtTime(ts) {
     if (!ts) return '';
@@ -80,14 +51,36 @@
   }
 
   function esc(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+    return String(str ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // ── Render: sidebar list ─────────────────────────────────
+  // ── API ───────────────────────────────────────────────────
+  async function fetchById(id) {
+    const res = await fetch(`${BASE_API}/events/${id}`);
+    if (!res.ok) throw new Error('not found');
+    return res.json();
+  }
+
+  async function fetchEvents() {
+    try {
+      const res = await fetch(`${BASE_API}/events`);
+      if (!res.ok) throw new Error('non-2xx');
+      errors = await res.json();
+      renderList();
+      if (errors.length) selectError(errors[0].id);
+    } catch {
+      demoMode = true;
+      errors = SAMPLE;
+      renderList();
+      if (errors.length) selectError(errors[0].id);
+      document.getElementById('sseLabel').textContent = 'Demo mode';
+      document.getElementById('sseDot').className = 'sse-dot';
+    }
+  }
+
+  // ── Render: sidebar list ──────────────────────────────────
   function renderList() {
     const list = document.getElementById('errorList');
 
@@ -97,33 +90,23 @@
     }
 
     list.innerHTML = errors.map(e => `
-    <div class="error-item${selectedId === e.id ? ' selected' : ''}" data-id="${esc(e.id)}">
-      <div class="error-item-row1">
-        <span class="badge badge-${esc(e.type)}">
-          ${esc(e.type.replace(/_/g, ' '))}
-        </span>
-
-        ${e.isNew ? '<span class="new-chip">NEW</span>' : ''}
-
-        ${!e.aiExplanation ? '<span class="analyzing-chip">analyzing…</span>' : ''}
+      <div class="error-item${selectedId === e.id ? ' selected' : ''}" data-id="${esc(e.id)}">
+        <div class="error-item-row1">
+          <span class="badge badge-${esc(e.type)}">${esc(e.type.replace(/_/g, ' '))}</span>
+          ${e.isNew ? '<span class="new-chip">NEW</span>' : ''}
+          ${!e.aiExplanation ? '<span class="analyzing-chip">analyzing…</span>' : ''}
+        </div>
+        <div class="error-exc">${esc(shortClass(e.exceptionClass))}</div>
+        <div class="error-time">${esc(fmtDateTime(e.timestamp))}</div>
       </div>
-
-      <div class="error-exc">
-        ${esc(shortClass(e.exceptionClass))}
-      </div>
-
-      <div class="error-time">
-        ${esc(fmtDateTime(e.timestamp))}
-      </div>
-    </div>
-  `).join('');
+    `).join('');
 
     list.querySelectorAll('.error-item').forEach(el => {
       el.addEventListener('click', () => selectError(el.dataset.id));
     });
   }
 
-  // ── Render: main detail panel ────────────────────────────
+  // ── Render: detail panel ──────────────────────────────────
   function renderDetail(e) {
     document.getElementById('emptyState').style.display = 'none';
     const panel = document.getElementById('detailPanel');
@@ -219,7 +202,7 @@
     `;
   }
 
-  // ── State mutations ──────────────────────────────────────
+  // ── State mutations ───────────────────────────────────────
   function selectError(id) {
     selectedId = id;
     renderList();
@@ -228,21 +211,9 @@
   }
 
   function addError(e) {
-    const newError = {
-      ...e,
-      isNew: true
-    };
-
-    errors = [
-      newError,
-      ...errors.map(item => ({
-        ...item,
-        isNew: false
-      }))
-    ];
-
+    errors = [{ ...e, isNew: true }, ...errors.map(x => ({ ...x, isNew: false }))];
     renderList();
-    selectError(newError.id);
+    selectError(e.id);
   }
 
   function updateAi(id, aiExplanation) {
@@ -254,35 +225,29 @@
     }
   }
 
-  // ── API ──────────────────────────────────────────────────
-  async function fetchEvents() {
-    try {
-      const res = await fetch(`${BASE}/stream`);
-      if (!res.ok) throw new Error('non-2xx');
-      errors = await res.json();
-      renderList();
-      if (errors.length) selectError(errors[0].id);
-    } catch {
-      // Fall back to demo data when backend is unreachable
-      errors = SAMPLE;
-      renderList();
-      if (errors.length) selectError(errors[0].id);
-      document.getElementById('sseLabel').textContent = 'Demo mode';
-      document.getElementById('sseDot').className = 'sse-dot';
-    }
-  }
-
+  // ── SSE ───────────────────────────────────────────────────
   function connectSSE() {
     try {
-      eventSource = new EventSource(`${BASE}/stream`);
+      eventSource = new EventSource(`${BASE_UI}/stream`);
 
-      eventSource.addEventListener('error-captured', ev => {
-        addError(JSON.parse(ev.data));
+      eventSource.addEventListener('error-captured', async ev => {
+        const { id } = JSON.parse(ev.data);
+        try {
+          const fullEvent = await fetchById(id);
+          addError(fullEvent);
+        } catch (e) {
+          console.error('Failed to fetch error by id:', id, e);
+        }
       });
 
-      eventSource.addEventListener('ai-insight-ready', ev => {
-        const dto = JSON.parse(ev.data);
-        updateAi(dto.id, dto.aiExplanation);
+      eventSource.addEventListener('ai-ready', async ev => {
+        const { id } = JSON.parse(ev.data);
+        try {
+          const fullEvent = await fetchById(id);
+          updateAi(fullEvent.id, fullEvent.aiExplanation);
+        } catch (e) {
+          console.error('Failed to fetch ai update for id:', id, e);
+        }
       });
 
       eventSource.onopen = () => {
@@ -294,17 +259,21 @@
         document.getElementById('sseDot').className = 'sse-dot';
         document.getElementById('sseLabel').textContent = 'SSE disconnected';
       };
+
     } catch {
-      // SSE not available (e.g. opened as file://)
+      // SSE not available
     }
   }
 
-  // ── Event listeners ──────────────────────────────────────
+  // ── Event listeners ───────────────────────────────────────
   document.getElementById('btnClear').addEventListener('click', async () => {
+    if (!demoMode) {
+      await fetch(`${BASE_API}/events`, { method: 'DELETE' });
+    }
     errors     = [];
     selectedId = null;
     renderList();
-    document.getElementById('emptyState').style.display = '';
+    document.getElementById('emptyState').style.display  = '';
     document.getElementById('detailPanel').style.display = 'none';
   });
 
@@ -315,7 +284,8 @@
     document.getElementById('themeLabel').textContent = isDark ? 'Light' : 'Dark';
   });
 
-  // ── Boot ─────────────────────────────────────────────────
+  // ── Boot ──────────────────────────────────────────────────
   connectSSE();
   fetchEvents().then(r => {});
+
 })();

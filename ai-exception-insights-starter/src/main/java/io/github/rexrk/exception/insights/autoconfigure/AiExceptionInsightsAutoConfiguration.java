@@ -2,6 +2,7 @@ package io.github.rexrk.exception.insights.autoconfigure;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.rexrk.exception.insights.capture.*;
+import io.github.rexrk.exception.insights.controller.ExceptionInsightsController;
 import io.github.rexrk.exception.insights.service.ai.AiExplanationService;
 import io.github.rexrk.exception.insights.service.output.console.ConsoleErrorOutput;
 import io.github.rexrk.exception.insights.service.output.ErrorOutput;
@@ -137,6 +138,13 @@ public class AiExceptionInsightsAutoConfiguration {
                 return asyncCapture;
             }
         };
+    }
+
+    // --- Controller ---
+
+    @Bean
+    public ExceptionInsightsController exceptionInsightsController(InMemoryErrorEventStore store) {
+        return new ExceptionInsightsController(store);
     }
 
 }
