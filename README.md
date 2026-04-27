@@ -1,95 +1,95 @@
-# 🚀 AI Dev Tools for Spring Boot
+# AI Dev Tools for Spring Boot
 
-A collection of **AI-powered Spring Boot starters** focused on **enhancing developer experience (DX)** during local development and testing.
+`ai-dev-tools` is a multi-module Maven workspace for Spring Boot developer tooling. The modules in this repository focus on local development workflows such as Swagger payload generation, exception capture, and live debugging dashboards.
 
-This repository contains production-grade tooling ideas that integrate deeply with the Spring ecosystem to help developers:
-- Fix APIs faster
-- Reduce repetitive work
-- Improve development experience during local runs
+## Modules
 
-> 🎯 **Goal**: Build AI-assisted developer tooling, not end-user applications.
+| Module | Purpose |
+| --- | --- |
+| `ai-swagger-helper-starter` | Injects a Swagger UI plugin that can generate JSON request bodies from OpenAPI schemas. |
+| `ai-exception-insights-starter` | Captures runtime failures, stores recent error events, and asks a Spring AI chat model for a short diagnosis. |
+| `dev-tools-ui` | Reusable SSE dashboard module used by the exception starter for browser-based output. |
+| `demo-app` | Sample application that wires the starters together and exposes endpoints to try them. |
 
----
+Each module has its own README with module-specific setup and usage details.
 
-## 📦 Repository Structure
+## Stack
 
-This is a **multi-module Maven project** with a shared parent POM.
+- Java 21
+- Spring Boot 4.0.2
+- Spring AI 2.0.0-M2
+- Maven multi-module build
+- `springdoc-openapi` for Swagger UI integration
+
+## Prerequisites
+
+- JDK 21
+- Maven 3.9+ or the included wrapper
+- An OpenAI-compatible API key if you want live AI responses
+
+The repository already includes sample configuration for an OpenAI-compatible endpoint through Spring AI. The demo app uses OpenRouter through the OpenAI adapter.
+
+## Build
+
+Unix-like shells:
+
+```bash
+./mvnw test
 ```
-ai-dev-tools
-├── .github/workflows
-├── LICENCE
-├── pom.xml # Parent POM
-├── ai-swagger-helper-starter # Swagger/OpenAPI DX tools
-├── demo-app # Usage example for all starters
-└── README.md
+
+Windows PowerShell:
+
+```powershell
+.\mvnw.cmd test
 ```
 
+## Run the Demo App
 
-Each module:
-- Is a **Spring Boot starter**
-- Is independently usable
-- Focuses on a specific developer pain point
+Set an API key first if you want AI-backed generation and exception analysis:
 
----
+```powershell
+$env:API_KEY="your-api-key"
+.\mvnw.cmd -pl demo-app -am spring-boot:run
+```
 
-## 🧠 Why AI + Spring Boot Starters?
+Useful URLs after startup:
 
-Traditional developer tools provide **raw data** (logs, specs, stack traces).  
-These starters use AI to convert that data into **actionable insights**.
+- Dashboard: `http://localhost:8081/`
+- Swagger UI: `http://localhost:8081/swagger-ui/index.html`
+- Exception event API: `http://localhost:8081/exception-insights/events`
 
-Examples:
-- Explaining *why* an API change is breaking
-- Generating realistic request payloads from OpenAPI
-- Summarizing errors instead of dumping stack traces
-- Reducing cognitive load during development
+Demo endpoints:
 
-AI is used **only where reasoning or summarization adds value**, not as a gimmick.
+- `POST /test/generate` for Swagger request-body generation
+- `GET /boom/http` for HTTP exception capture
+- `GET /boom/async` for `@Async` exception capture
+- `GET /boom/thread` for uncaught thread exception capture
+- `GET /boom/event` for an event-listener failure triggered from an HTTP request
 
----
+## Configuration Example
 
-## 🧩 Available Starters
+```yaml
+spring:
+  ai:
+    openai:
+      api-key: ${API_KEY}
+      chat:
+        base-url: https://openrouter.ai/api
+        options:
+          model: inclusionai/ling-2.6-1t:free
 
-### 1️⃣ AI Swagger Helper Starter
-📁 `ai-swagger-helper-starter`
+devtools:
+  ai:
+    swagger-helper:
+      enabled: true
+      mode: ai
+    exception-insights:
+      enabled: true
+      output: ui
+```
 
-Enhancements for Swagger / OpenAPI during development.
+## Notes
 
-**Features**
-- Adds a Swagger UI extension
-- Generates realistic, real-world request bodies
-- Helps developers test APIs faster without manually crafting payloads
-
-**Use case**
-- Local development
-- API testing
-
----
-
-## 🛠 Planned / In-Progress Starters
-
-- **AI Exception Explainer Starter**  
-  Converts Spring stack traces into human-readable explanations.
-
-- **AI Exception Handler**
-
-(Each starter will live in its own module with independent documentation.)*
-
----
-
-
-## 🧰 Tech Stack
-
-- Java 21+
-- Spring Boot 4
-- Spring Auto-Configuration
-- OpenAPI / Swagger
-- Maven (multi-module)
-- OpenRouter LLM integration (pluggable)
-
----
-
-## 📌 Who Is This For?
-
-- Backend developers working with Spring Boot
-- Engineers interested in platform / tooling work
-- Developers exploring AI-assisted development workflows
+- `ai-swagger-helper-starter` supports `AUTO`, `AI`, and `RANDOM` modes.
+- `ai-exception-insights-starter` stores events in memory only and can output to the console or the browser UI.
+- `dev-tools-ui` is reusable, but the shipped dashboard is currently tailored to the exception starter's REST and SSE contract.
