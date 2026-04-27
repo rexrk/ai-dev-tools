@@ -4,32 +4,50 @@
 
   const SAMPLE = [
     {
-      id: 'a1b2c3', timestamp: '2026-04-20T10:30:00Z', type: 'HTTP_REQUEST',
-      exceptionClass: 'java.lang.NullPointerException', message: 'Cannot invoke getUser()',
-      rootCauseClass: 'java.lang.NullPointerException', rootCauseMessage: 'Cannot invoke getUser()',
-      httpMethod: 'POST', requestUri: '/api/users', requestBody: '{"name":"John"}',
-      context: { thread: 'http-nio-8080', method: 'UserService.createUser' },
+      id: 'demo-event-001',
+      timestamp: '2026-04-20T10:30:00Z',
+      type: 'HTTP_REQUEST',
+      exceptionClass: 'com.example.DemoException',
+      message: 'Simulated error message for demo purposes only',
+      rootCauseClass: 'com.example.DemoException',
+      rootCauseMessage: 'Placeholder failure used to preview the UI',
+      httpMethod: 'POST',
+      requestUri: '/api/demo-users',
+      requestBody: '{"name":"Sample User"}',
+      context: {
+        thread: 'demo-thread-1',
+        method: 'DemoUserService.createSampleUser'
+      },
       recentLogs: [
-        { level: 'WARN', message: 'Validation skipped', loggerName: 'com.example.UserService', threadName: 'http-nio-8080', timestamp: '2026-04-20T10:29:59Z' },
-        { level: 'INFO', message: 'Request received: POST /api/users', loggerName: 'com.example.RequestFilter', threadName: 'http-nio-8080', timestamp: '2026-04-20T10:29:58Z' }
+        {
+          level: 'WARN',
+          message: 'Dummy validation warning for sample display',
+          loggerName: 'com.example.DemoUserService',
+          threadName: 'demo-thread-1',
+          timestamp: '2026-04-20T10:29:59Z'
+        },
+        {
+          level: 'INFO',
+          message: 'Sample request received: POST /api/demo-users',
+          loggerName: 'com.example.DemoRequestFilter',
+          threadName: 'demo-thread-1',
+          timestamp: '2026-04-20T10:29:58Z'
+        }
       ],
       aiExplanation: {
-        summary: 'A null value was returned by getUser() and dereferenced without a null check, causing a NullPointerException during user creation.',
-        causes: ['UserRepository.findById() returned null and was not checked before use', 'The user lookup was skipped due to missing validation in the request pipeline'],
-        fixes: ['Add a null check after calling getUser() and return a 404 if the user is absent', 'Ensure request validation runs before the service layer is invoked', 'Consider using Optional<User> to make null-safety explicit']
+        summary: 'This is placeholder diagnostic data showing how an exception analysis might appear in the UI.',
+        causes: [
+          'A simulated null value was introduced for demo purposes',
+          'This sample intentionally mimics a service-layer failure'
+        ],
+        fixes: [
+          'Replace this mock entry with live backend data',
+          'Keep placeholder labels so demo content is clearly non-production',
+          'Use additional sample cases to test different UI states'
+        ]
       }
-    },
-    {
-      id: 'd4e5f6', timestamp: '2026-04-20T10:28:00Z', type: 'SCHEDULED',
-      exceptionClass: 'org.springframework.dao.DataAccessException', message: 'Unable to acquire JDBC connection',
-      rootCauseClass: 'java.sql.SQLTransientConnectionException', rootCauseMessage: 'Connection pool exhausted',
-      context: { thread: 'scheduling-1', method: 'ReportJob.generateDaily' },
-      recentLogs: [
-        { level: 'ERROR', message: 'Failed to obtain connection from pool', loggerName: 'com.zaxxer.hikari.pool.HikariPool', threadName: 'scheduling-1', timestamp: '2026-04-20T10:27:58Z' }
-      ],
-      aiExplanation: null
-    },
-  ];
+    }
+  ]
 
   // ── State ─────────────────────────────────────────────────
   let errors     = [];
@@ -240,7 +258,7 @@
         }
       });
 
-      eventSource.addEventListener('ai-ready', async ev => {
+      eventSource.addEventListener('ai-insight-ready', async ev => {
         const { id } = JSON.parse(ev.data);
         try {
           const fullEvent = await fetchById(id);
